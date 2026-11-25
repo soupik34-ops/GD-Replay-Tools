@@ -121,12 +121,12 @@ namespace {
             m_noclipLabel->setPosition({82.f, 158.f});
             panel->addChild(m_noclipLabel);
 
-            m_speedLabel = CCLabelBMFont::create("", ZC_FONT);
+            m_speedLabel = CCLabelBMFont::create("", "chatFont.fnt");
             m_speedLabel->setScale(0.55f);
             m_speedLabel->setPosition({218.f, 158.f});
             panel->addChild(m_speedLabel);
 
-            m_recordLabel = CCLabelBMFont::create("", ZC_FONT);
+            m_recordLabel = CCLabelBMFont::create("", "chatFont.fnt");
             m_recordLabel->setScale(0.55f);
             m_recordLabel->setPosition({150.f, 103.f});
             panel->addChild(m_recordLabel);
