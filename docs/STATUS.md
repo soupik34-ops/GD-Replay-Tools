@@ -3,23 +3,23 @@
 ## Implemented in source
 
 - Geode mod entry point.
-- Geode settings for input recording, speed multiplier, noclip, jump option, and menu visuals.
-- A first input-recorder prototype that records timestamped PlayerButton press events in memory while recording is enabled.
+- Settings for recording, speed multiplier, noclip, jump option, and menu visuals.
+- Timestamped capture of PlayerObject button press and release events.
+- Replay event serialization to CSV text stored in Geode saved data when PlayLayer is quit.
+- Android64 GitHub Actions build workflow.
 
 ## Not implemented yet
 
-- Persisting recordings to a file.
-- Playback and deterministic replay.
-- Button-release capture and timing validation.
+- Loading a saved replay into a playback timeline.
+- Replaying events at their recorded timestamps.
+- Dedicated .gdbot file import/export.
 - Actual speed manipulation.
 - Collision bypass.
-- Jump behavior changes.
+- Jump behavior modification.
 - Main-menu background replacement.
 
-## Important compatibility note
+## Compatibility and validation
 
-The target is Android ARM64. The game version supplied so far is "2.2.144"; confirm the exact version shown by Geode because Geode's official metadata commonly uses a numeric game version format such as 2.2081. Do not assume compatibility based on the APK filename.
+Target: Android ARM64. The game version reported by the user is "2.2.144"; verify the exact version displayed by the installed Geode loader and use the matching SDK/bindings.
 
-## Validation
-
-No Android build has been run from this repository yet. The source must be compiled against the Geode SDK version installed for the target game, then tested on-device.
+The GitHub Actions workflow has been added but has not yet been confirmed successful. No in-game test has been performed on the user's phone.
