@@ -10,16 +10,7 @@ namespace {
     bool s_noclipEnabled = false;
     bool s_speedEnabled = false;
 
-    std::string resourcePath(char const* name) {
-        return (Mod::get()->getResourcesDir() / name).string();
-    }
-
-    CCSprite* loadResourceSprite(char const* name) {
-        auto path = resourcePath(name);
-        auto sprite = CCSprite::create(path.c_str());
-        if (!sprite) log::warn("Could not load mod resource: {}", path);
-        return sprite;
-    }
+    constexpr char const* ZC_FONT = "ZC_Emblem.fnt"_spr;
 
     void applySpeed() {
         auto director = CCDirector::get();
@@ -44,7 +35,7 @@ namespace {
         }
 
         CCMenuItemSpriteExtra* makeButton(char const* text, char const* frame, std::function<void()> callback) {
-            auto sprite = ButtonSprite::create(text, 118, 0, 0.55f, false, "goldFont.fnt", frame, 28.f);
+            auto sprite = ButtonSprite::create(text, 118, 0, 0.55f, false, ZC_FONT, frame, 28.f);
             return CCMenuItemExt::createSpriteExtra(sprite, [callback](CCMenuItemSpriteExtra*) { callback(); });
         }
 
@@ -55,8 +46,11 @@ namespace {
             auto launcherMenu = CCMenu::create();
             launcherMenu->setPosition(CCPointZero);
 
-            auto emblem = loadResourceSprite("Emblem.png");
-            if (!emblem) emblem = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+            auto emblem = CCSprite::create("Emblem.png"_spr);
+            if (!emblem) {
+                log::warn("Could not load registered ZC emblem sprite");
+                emblem = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+            }
             if (emblem) {
                 emblem->setScale(0.105f);
                 auto launcher = CCMenuItemSpriteExtra::create(
@@ -74,16 +68,17 @@ namespace {
             m_panel = panel;
             addChild(panel, 900);
 
-            // Custom ZC artwork is loaded from the mod's packaged resources.
-            if (auto background = loadResourceSprite("Menu.png")) {
+            if (auto background = CCSprite::create("Menu.png"_spr)) {
                 auto size = background->getContentSize();
                 background->setPosition({150.f, 135.f});
                 background->setScaleX(300.f / size.width);
                 background->setScaleY(270.f / size.height);
                 panel->addChild(background, -1);
+            } else {
+                log::warn("Could not load registered ZC menu background sprite");
             }
 
-            auto title = CCLabelBMFont::create("GD REPLAY TOOLS", "bigFont.fnt");
+            auto title = CCLabelBMFont::create("GD REPLAY TOOLS", ZC_FONT);
             title->setScale(0.48f);
             title->setPosition({150.f, 238.f});
             panel->addChild(title);
@@ -123,17 +118,17 @@ namespace {
             kill->setPosition({218.f, 65.f});
             menu->addChild(kill);
 
-            m_noclipLabel = CCLabelBMFont::create("", "chatFont.fnt");
+            m_noclipLabel = CCLabelBMFont::create("", ZC_FONT);
             m_noclipLabel->setScale(0.55f);
             m_noclipLabel->setPosition({82.f, 158.f});
             panel->addChild(m_noclipLabel);
 
-            m_speedLabel = CCLabelBMFont::create("", "chatFont.fnt");
+            m_speedLabel = CCLabelBMFont::create("", ZC_FONT);
             m_speedLabel->setScale(0.55f);
             m_speedLabel->setPosition({218.f, 158.f});
             panel->addChild(m_speedLabel);
 
-            m_recordLabel = CCLabelBMFont::create("", "chatFont.fnt");
+            m_recordLabel = CCLabelBMFont::create("", ZC_FONT);
             m_recordLabel->setScale(0.55f);
             m_recordLabel->setPosition({150.f, 103.f});
             panel->addChild(m_recordLabel);
@@ -220,5 +215,5 @@ class $modify(GDRTGameplayLayer, PlayLayer) {
 };
 
 $on_mod(Loaded) {
-    log::info("GD Replay Tools loaded; custom ZC menu artwork enabled.");
+    log::info("GD Replay Tools loaded; ZC sprites and font registered.");
 }
