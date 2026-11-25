@@ -1,5 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
+#include <Geode/modify/PauseLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 
 using namespace geode::prelude;
@@ -8,6 +9,17 @@ namespace {
     bool s_menuKilled = false;
     bool s_noclipEnabled = false;
     bool s_speedEnabled = false;
+
+    std::string resourcePath(char const* name) {
+        return (Mod::get()->getResourcesDir() / name).string();
+    }
+
+    CCSprite* loadResourceSprite(char const* name) {
+        auto path = resourcePath(name);
+        auto sprite = CCSprite::create(path.c_str());
+        if (!sprite) log::warn("Could not load mod resource: {}", path);
+        return sprite;
+    }
 
     void applySpeed() {
         auto director = CCDirector::get();
@@ -27,11 +39,11 @@ namespace {
             if (m_speedLabel) m_speedLabel->setString(s_speedEnabled ? "SPEED: ON" : "SPEED: OFF");
             if (m_recordLabel) {
                 bool recording = Mod::get()->getSettingValue<bool>("record-inputs");
-                m_recordLabel->setString(recording ? "RECORD INPUTS: ON" : "RECORD INPUTS: OFF");
+                m_recordLabel->setString(recording ? "RECORD: ON" : "RECORD: OFF");
             }
         }
 
-        CCMenuItemSpriteExtra* makeButton(const char* text, const char* frame, std::function<void()> callback) {
+        CCMenuItemSpriteExtra* makeButton(char const* text, char const* frame, std::function<void()> callback) {
             auto sprite = ButtonSprite::create(text, 118, 0, 0.55f, false, "goldFont.fnt", frame, 28.f);
             return CCMenuItemExt::createSpriteExtra(sprite, [callback](CCMenuItemSpriteExtra*) { callback(); });
         }
@@ -42,34 +54,38 @@ namespace {
 
             auto launcherMenu = CCMenu::create();
             launcherMenu->setPosition(CCPointZero);
-            auto launcher = CCMenuItemExt::createSpriteExtra(
-                CircleButtonSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png", 1.f, CircleBaseColor::Cyan),
-                [this](CCMenuItemSpriteExtra*) { togglePanel(); }
-            );
-            launcher->setPosition({win.width - 36.f, win.height * 0.55f});
-            launcherMenu->addChild(launcher);
-            addChild(launcherMenu, 30);
 
-            auto panel = CCLayerColor::create({13, 22, 42, 245}, 270.f, 250.f);
-            panel->setPosition({(win.width - 270.f) / 2.f, (win.height - 250.f) / 2.f});
+            auto emblem = loadResourceSprite("Emblem.png");
+            if (!emblem) emblem = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+            if (emblem) {
+                emblem->setScale(0.105f);
+                auto launcher = CCMenuItemSpriteExtra::create(
+                    emblem, this, menu_selector(GDRTOverlay::onLauncher)
+                );
+                launcher->setPosition({win.width - 38.f, win.height * 0.55f});
+                launcherMenu->addChild(launcher);
+            }
+            addChild(launcherMenu, 1000);
+
+            auto panel = CCLayerColor::create({18, 12, 42, 245}, 300.f, 270.f);
+            panel->setPosition({(win.width - 300.f) / 2.f, (win.height - 270.f) / 2.f});
             panel->setScale(0.01f);
             panel->setVisible(false);
             m_panel = panel;
-            addChild(panel, 20);
+            addChild(panel, 900);
 
-            // Native Geometry Dash panel texture, with a color fallback if the frame is unavailable.
-            if (auto frame = CCSprite::createWithSpriteFrameName("GJ_square01.png")) {
-                frame->setPosition({135.f, 125.f});
-                frame->setScaleX(270.f / frame->getContentSize().width);
-                frame->setScaleY(250.f / frame->getContentSize().height);
-                frame->setColor({22, 48, 83});
-                frame->setOpacity(235);
-                panel->addChild(frame, -1);
+            // Custom ZC artwork is loaded from the mod's packaged resources.
+            if (auto background = loadResourceSprite("Menu.png")) {
+                auto size = background->getContentSize();
+                background->setPosition({150.f, 135.f});
+                background->setScaleX(300.f / size.width);
+                background->setScaleY(270.f / size.height);
+                panel->addChild(background, -1);
             }
 
             auto title = CCLabelBMFont::create("GD REPLAY TOOLS", "bigFont.fnt");
             title->setScale(0.48f);
-            title->setPosition({135.f, 220.f});
+            title->setPosition({150.f, 238.f});
             panel->addChild(title);
 
             auto menu = CCMenu::create();
@@ -80,7 +96,7 @@ namespace {
                 s_noclipEnabled = !s_noclipEnabled;
                 refreshLabels();
             });
-            noclip->setPosition({75.f, 174.f});
+            noclip->setPosition({82.f, 185.f});
             menu->addChild(noclip);
 
             auto speed = makeButton("SPEED", "GJ_button_04.png", [this] {
@@ -88,7 +104,7 @@ namespace {
                 applySpeed();
                 refreshLabels();
             });
-            speed->setPosition({195.f, 174.f});
+            speed->setPosition({218.f, 185.f});
             menu->addChild(speed);
 
             auto record = makeButton("RECORD", "GJ_button_04.png", [this] {
@@ -96,34 +112,36 @@ namespace {
                 Mod::get()->setSettingValue("record-inputs", !enabled);
                 refreshLabels();
             });
-            record->setPosition({135.f, 124.f});
+            record->setPosition({150.f, 130.f});
             menu->addChild(record);
 
             auto hide = makeButton("HIDE MENU", "GJ_button_01.png", [this] { hidePanel(); });
-            hide->setPosition({75.f, 62.f});
+            hide->setPosition({82.f, 65.f});
             menu->addChild(hide);
 
             auto kill = makeButton("KILL MENU", "GJ_button_02.png", [this] { killMenu(); });
-            kill->setPosition({195.f, 62.f});
+            kill->setPosition({218.f, 65.f});
             menu->addChild(kill);
 
             m_noclipLabel = CCLabelBMFont::create("", "chatFont.fnt");
             m_noclipLabel->setScale(0.55f);
-            m_noclipLabel->setPosition({75.f, 148.f});
+            m_noclipLabel->setPosition({82.f, 158.f});
             panel->addChild(m_noclipLabel);
 
             m_speedLabel = CCLabelBMFont::create("", "chatFont.fnt");
             m_speedLabel->setScale(0.55f);
-            m_speedLabel->setPosition({195.f, 148.f});
+            m_speedLabel->setPosition({218.f, 158.f});
             panel->addChild(m_speedLabel);
 
             m_recordLabel = CCLabelBMFont::create("", "chatFont.fnt");
             m_recordLabel->setScale(0.55f);
-            m_recordLabel->setPosition({135.f, 98.f});
+            m_recordLabel->setPosition({150.f, 103.f});
             panel->addChild(m_recordLabel);
             refreshLabels();
             return true;
         }
+
+        void onLauncher(CCObject*) { togglePanel(); }
 
         void togglePanel() {
             if (!m_panel) return;
@@ -162,7 +180,7 @@ namespace {
 
     void addOverlay(CCNode* layer) {
         if (!s_menuKilled && layer) {
-            if (auto overlay = GDRTOverlay::create()) layer->addChild(overlay, 1000);
+            if (auto overlay = GDRTOverlay::create()) layer->addChild(overlay, 10000);
         }
     }
 }
@@ -175,10 +193,16 @@ class $modify(GDRTMenuLayer, MenuLayer) {
     }
 };
 
+class $modify(GDRTPauseLayer, PauseLayer) {
+    void customSetup() {
+        PauseLayer::customSetup();
+        addOverlay(this);
+    }
+};
+
 class $modify(GDRTGameplayLayer, PlayLayer) {
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
-        addOverlay(this);
         return true;
     }
 
@@ -196,5 +220,5 @@ class $modify(GDRTGameplayLayer, PlayLayer) {
 };
 
 $on_mod(Loaded) {
-    log::info("GD Replay Tools loaded.");
+    log::info("GD Replay Tools loaded; custom ZC menu artwork enabled.");
 }
