@@ -1,60 +1,55 @@
 {
-    "geode": "$GEODE_VERSION",
-    "gd": {
-        "android": "*"
+  "geode": "5.11.2",
+  "gd": { "android": "*" },
+  "id": "soupik34.gd-replay-tools",
+  "name": "GD Replay Tools",
+  "version": "v0.1.0",
+  "developer": "soupik34-ops",
+  "description": "Replay tools, gameplay practice options, and visual customization.",
+  "settings": {
+    "record-inputs": {
+      "name": "Record player inputs",
+      "description": "Capture timestamped jump/button press events for the replay system prototype.",
+      "type": "bool",
+      "default": false
     },
-    "id": "soupik34.gd-replay-tools",
-    "name": "GD Replay Tools",
-    "version": "v0.1.0",
-    "developer": "soupik34-ops",
-    "description": "Replay tools, gameplay practice options, and visual customization.",
-    "settings": {
-        "record-inputs": {
-            "name": "Record player inputs",
-            "description": "Capture timestamped jump/button press events for the replay system prototype.",
-            "type": "bool",
-            "default": false
-        },
-        "speedhack-enabled": {
-            "name": "Enable Speedhack",
-            "description": "Reserved toggle; gameplay speed control is not implemented yet.",
-            "type": "bool",
-            "default": false
-        },
-        "speedhack-multiplier": {
-            "name": "Speed multiplier",
-            "description": "Target multiplier for the planned speed control.",
-            "type": "float",
-            "default": 1.0,
-            "min": 0.25,
-            "max": 3.0,
-            "control": {
-                "slider": true,
-                "slider-step": 0.05
-            }
-        },
-        "noclip-enabled": {
-            "name": "Enable Noclip",
-            "description": "Reserved toggle; collision handling is not implemented yet.",
-            "type": "bool",
-            "default": false
-        },
-        "jump-hack-enabled": {
-            "name": "Enable Jump Hack",
-            "description": "Reserved toggle; jump behavior modification is not implemented yet.",
-            "type": "bool",
-            "default": false
-        },
-        "custom-menu-background": {
-            "name": "Custom menu background",
-            "description": "Reserved toggle for the planned title-screen visual customization.",
-            "type": "bool",
-            "default": false
-        },
-        "menu-background-color": {
-            "name": "Menu background tint",
-            "type": "color",
-            "default": "#243b66"
-        }
+    "speedhack-enabled": {
+      "name": "Enable Speedhack",
+      "description": "Reserved toggle; gameplay speed control is not implemented yet.",
+      "type": "bool",
+      "default": false
+    },
+    "speedhack-multiplier": {
+      "name": "Speed multiplier",
+      "description": "Target multiplier for the planned speed control.",
+      "type": "float",
+      "default": 1.0,
+      "min": 0.25,
+      "max": 3.0,
+      "control": { "slider": true, "slider-step": 0.05 }
+    },
+    "noclip-enabled": {
+      "name": "Enable Noclip",
+      "description": "Reserved toggle; collision handling is not implemented yet.",
+      "type": "bool",
+      "default": false
+    },
+    "jump-hack-enabled": {
+      "name": "Enable Jump Hack",
+      "description": "Reserved toggle; jump behavior modification is not implemented yet.",
+      "type": "bool",
+      "default": false
+    },
+    "custom-menu-background": {
+      "name": "Custom menu background",
+      "description": "Reserved toggle for the planned title-screen visual customization.",
+      "type": "bool",
+      "default": false
+    },
+    "menu-background-color": {
+      "name": "Menu background tint",
+      "type": "color",
+      "default": "#243b66"
     }
+  }
 }
