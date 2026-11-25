@@ -1,0 +1,11 @@
+{
+    "geode": "$GEODE_VERSION",
+    "gd": {
+        "android": "*"
+    },
+    "id": "soupik34.gd-replay-tools",
+    "name": "GD Replay Tools",
+    "version": "v0.1.0",
+    "developer": "soupik34-ops",
+    "description": "Replay tools, gameplay practice options, and visual customization."
+}
