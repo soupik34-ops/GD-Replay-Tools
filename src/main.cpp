@@ -10,8 +10,6 @@ namespace {
     bool s_noclipEnabled = false;
     bool s_speedEnabled = false;
 
-    constexpr char const* ZC_FONT = "ZC_Emblem.fnt"_spr;
-
     void applySpeed() {
         auto director = CCDirector::get();
         if (!director || !director->getScheduler()) return;
@@ -35,7 +33,7 @@ namespace {
         }
 
         CCMenuItemSpriteExtra* makeButton(char const* text, char const* frame, std::function<void()> callback) {
-            auto sprite = ButtonSprite::create(text, 118, 0, 0.55f, false, ZC_FONT, frame, 28.f);
+            auto sprite = ButtonSprite::create(text, 118, 0, 0.55f, false, "goldFont.fnt", frame, 28.f);
             return CCMenuItemExt::createSpriteExtra(sprite, [callback](CCMenuItemSpriteExtra*) { callback(); });
         }
 
@@ -61,7 +59,7 @@ namespace {
             }
             addChild(launcherMenu, 1000);
 
-            auto panel = CCLayerColor::create({18, 12, 42, 245}, 300.f, 270.f);
+            auto panel = CCLayerColor::create({18, 12, 42, 125}, 300.f, 270.f);
             panel->setPosition({(win.width - 300.f) / 2.f, (win.height - 270.f) / 2.f});
             panel->setScale(0.01f);
             panel->setVisible(false);
@@ -71,14 +69,14 @@ namespace {
             if (auto background = CCSprite::create("Menu.png"_spr)) {
                 auto size = background->getContentSize();
                 background->setPosition({150.f, 135.f});
-                background->setScaleX(300.f / size.width);
-                background->setScaleY(270.f / size.height);
+                float scale = std::min(300.f / size.width, 270.f / size.height);
+                background->setScale(scale);
                 panel->addChild(background, -1);
             } else {
                 log::warn("Could not load registered ZC menu background sprite");
             }
 
-            auto title = CCLabelBMFont::create("GD REPLAY TOOLS", ZC_FONT);
+            auto title = CCLabelBMFont::create("GD REPLAY TOOLS", "bigFont.fnt");
             title->setScale(0.48f);
             title->setPosition({150.f, 238.f});
             panel->addChild(title);
@@ -118,7 +116,7 @@ namespace {
             kill->setPosition({218.f, 65.f});
             menu->addChild(kill);
 
-            m_noclipLabel = CCLabelBMFont::create("", ZC_FONT);
+            m_noclipLabel = CCLabelBMFont::create("", "chatFont.fnt");
             m_noclipLabel->setScale(0.55f);
             m_noclipLabel->setPosition({82.f, 158.f});
             panel->addChild(m_noclipLabel);
