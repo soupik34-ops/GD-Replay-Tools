@@ -6,6 +6,20 @@
   "version": "v0.1.0",
   "developer": "soupik34-ops",
   "description": "Replay tools, gameplay practice options, and visual customization.",
+  "resources": {
+    "sprites": [
+      "resources/Emblem.png",
+      "resources/Menu.png",
+      "resources/Loading_screen.png"
+    ],
+    "fonts": {
+      "ZC_Emblem": {
+        "path": "resources/ZC_Emblem.ttf",
+        "size": 80,
+        "charset": "32-126,8226"
+      }
+    }
+  },
   "settings": {
     "record-inputs": {
       "name": "Record player inputs",
