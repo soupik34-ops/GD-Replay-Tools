@@ -59,7 +59,9 @@ namespace {
             }
             addChild(launcherMenu, 1000);
 
-            auto panel = CCLayerColor::create({18, 12, 42, 125}, 300.f, 270.f);
+            // Transparent container: controls sit directly over the custom image.
+            auto panel = CCLayer::create();
+            panel->setContentSize({300.f, 270.f});
             panel->setPosition({(win.width - 300.f) / 2.f, (win.height - 270.f) / 2.f});
             panel->setScale(0.01f);
             panel->setVisible(false);
