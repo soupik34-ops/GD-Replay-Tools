@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayerObject.hpp>
-#include <Geode/modify/PlayLayer.hpp>
 
 #include <chrono>
 #include <cstdint>
@@ -10,82 +9,153 @@
 
 using namespace geode::prelude;
 
-namespace {
+namespace gdrt {
     struct RecordedInput {
-        std::uint64_t microseconds;
-        int button;
-        bool down;
+        double gameSeconds = 0.0;
+        int button = 0;
+        bool down = false;
     };
 
-    std::vector<RecordedInput> s_recordedInputs;
-    std::chrono::steady_clock::time_point s_recordingStart;
-    bool s_hasRecordingStart = false;
+    static std::vector<RecordedInput> s_events;
+    static std::vector<RecordedInput> s_playback;
+    static std::chrono::steady_clock::time_point s_recordStart;
+    static double s_playTime = 0.0;
+    static std::size_t s_playIndex = 0;
+    static bool s_recording = false;
+    static bool s_playing = false;
 
-    void recordInput(PlayerButton button, bool down) {
-        if (!Mod::get()->getSettingValue<bool>("record-inputs")) {
-            return;
+    static float speedMultiplier() {
+        if (!Mod::get()->getSettingValue<bool>("speedhack-enabled")) return 1.f;
+        return Mod::get()->getSettingValue<float>("speedhack-multiplier");
+    }
+
+    static std::string serialize(std::vector<RecordedInput> const& events) {
+        std::ostringstream out;
+        out << "GDRT-REPLAY,2\n";
+        out.precision(9);
+        for (auto const& event : events) {
+            out << event.gameSeconds << ',' << event.button << ',' << (event.down ? 1 : 0) << '\n';
         }
+        return out.str();
+    }
 
-        const auto now = std::chrono::steady_clock::now();
-        if (!s_hasRecordingStart) {
-            s_recordingStart = now;
-            s_hasRecordingStart = true;
+    static std::vector<RecordedInput> parse(std::string const& data) {
+        std::vector<RecordedInput> result;
+        std::istringstream input(data);
+        std::string line;
+        if (!std::getline(input, line) || line.rfind("GDRT-REPLAY,", 0) != 0) return result;
+        while (std::getline(input, line)) {
+            std::istringstream row(line);
+            std::string time, button, down;
+            if (!std::getline(row, time, ',') || !std::getline(row, button, ',') || !std::getline(row, down, ',')) continue;
+            try {
+                result.push_back({std::stod(time), std::stoi(button), std::stoi(down) != 0});
+            } catch (...) {
+                continue;
+            }
         }
+        return result;
+    }
 
-        const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-            now - s_recordingStart
-        ).count();
+    void startRecording() {
+        s_events.clear();
+        s_recordStart = std::chrono::steady_clock::now();
+        s_recording = true;
+        s_playing = false;
+        s_playback.clear();
+        s_playIndex = 0;
+        Mod::get()->setSettingValue("record-inputs", true);
+        log::info("Replay recording started.");
+    }
 
-        s_recordedInputs.push_back({
-            static_cast<std::uint64_t>(elapsed),
-            static_cast<int>(button),
-            down
-        });
+    void stopRecording() {
+        s_recording = false;
+        Mod::get()->setSettingValue("record-inputs", false);
+        log::info("Replay recording stopped ({} events).", s_events.size());
+    }
+
+    bool isRecording() { return s_recording; }
+    bool hasSavedReplay() {
+        return !Mod::get()->getSavedValue<std::string>("last-replay-csv", "").empty();
     }
 
     void saveRecording() {
-        if (s_recordedInputs.empty()) {
-            return;
+        if (s_recording) stopRecording();
+        if (s_events.empty()) return;
+        auto data = serialize(s_events);
+        Mod::get()->setSavedValue<std::string>("last-replay-csv", data);
+        log::info("Replay saved ({} events).", s_events.size());
+    }
+
+    int getTemplateCount() {
+        return Mod::get()->getSavedValue<int>("replay-template-count", 0);
+    }
+
+    void createTemplate() {
+        auto data = Mod::get()->getSavedValue<std::string>("last-replay-csv", "");
+        if (data.empty()) return;
+        int count = getTemplateCount();
+        Mod::get()->setSavedValue<std::string>("replay-template-" + std::to_string(count + 1), data);
+        Mod::get()->setSavedValue<int>("replay-template-count", count + 1);
+        log::info("Created replay template #{}.", count + 1);
+    }
+
+    void deleteTemplate() {
+        int count = getTemplateCount();
+        if (count <= 0) return;
+        Mod::get()->setSavedValue<std::string>("replay-template-" + std::to_string(count), "");
+        Mod::get()->setSavedValue<int>("replay-template-count", count - 1);
+        log::info("Deleted the latest replay template.");
+    }
+
+    void startPlayback() {
+        auto data = Mod::get()->getSavedValue<std::string>("last-replay-csv", "");
+        if (data.empty()) {
+            int count = getTemplateCount();
+            if (count > 0) data = Mod::get()->getSavedValue<std::string>("replay-template-" + std::to_string(count), "");
         }
+        s_playback = parse(data);
+        s_playIndex = 0;
+        s_playTime = 0.0;
+        s_playing = !s_playback.empty();
+        s_recording = false;
+        Mod::get()->setSettingValue("record-inputs", false);
+        log::info(s_playing ? "Replay playback started." : "No saved replay to play.");
+    }
 
-        std::ostringstream output;
-        output << "GDRT-REPLAY,1\n";
-        output << "time_us,button,down\n";
+    void stopPlayback() {
+        s_playing = false;
+        s_playback.clear();
+        s_playIndex = 0;
+    }
 
-        for (const auto& input : s_recordedInputs) {
-            output << input.microseconds << ','
-                   << input.button << ','
-                   << (input.down ? 1 : 0) << '\n';
+    void advancePlayback(PlayerObject* player, float gameDelta) {
+        if (!s_playing || !player || gameDelta <= 0.f) return;
+        s_playTime += gameDelta;
+        while (s_playIndex < s_playback.size() && s_playback[s_playIndex].gameSeconds <= s_playTime) {
+            auto const& event = s_playback[s_playIndex++];
+            auto button = static_cast<PlayerButton>(event.button);
+            if (event.down) player->pushButton(button);
+            else player->releaseButton(button);
         }
+        if (s_playIndex >= s_playback.size()) stopPlayback();
+    }
 
-        Mod::get()->setSavedValue<std::string>("last-replay-csv", output.str());
-        log::info("Saved {} replay input events to Geode saved data.", s_recordedInputs.size());
+    static void recordInput(PlayerButton button, bool down) {
+        if (!s_recording || s_playing) return;
+        auto elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - s_recordStart).count();
+        s_events.push_back({elapsed * speedMultiplier(), static_cast<int>(button), down});
     }
 }
 
 class $modify(GDRTPlayerObject, PlayerObject) {
     void pushButton(PlayerButton button) {
-        recordInput(button, true);
+        gdrt::recordInput(button, true);
         PlayerObject::pushButton(button);
     }
 
     void releaseButton(PlayerButton button) {
-        recordInput(button, false);
+        gdrt::recordInput(button, false);
         PlayerObject::releaseButton(button);
-    }
-};
-
-class $modify(GDRTPlayLayer, PlayLayer) {
-    void onQuit() {
-        saveRecording();
-        PlayLayer::onQuit();
-    }
-};
-
-$on_mod(Loaded) {
-    log::info("GD Replay Tools input recorder loaded.");
-    auto saved = Mod::get()->getSavedValue<std::string>("last-replay-csv", "");
-    if (!saved.empty()) {
-        log::info("A saved replay is available ({} bytes).", saved.size());
     }
 }
