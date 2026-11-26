@@ -120,7 +120,8 @@ namespace gdrt {
         s_playing = !s_playback.empty();
         s_recording = false;
         Mod::get()->setSettingValue("record-inputs", false);
-        log::info(s_playing ? "Replay playback started." : "No saved replay to play.");
+        if (s_playing) log::info("Replay playback started.");
+        else log::info("No saved replay to play.");
     }
 
     void stopPlayback() {
