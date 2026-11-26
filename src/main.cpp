@@ -3,6 +3,8 @@
 #include <Geode/modify/PlayLayer.hpp>
 
 #include <algorithm>
+#include <cmath>
+#include <cstdio>
 #include <functional>
 #include <string>
 
