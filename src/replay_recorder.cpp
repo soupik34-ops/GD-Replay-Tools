@@ -159,4 +159,4 @@ class $modify(GDRTPlayerObject, PlayerObject) {
         gdrt::recordInput(button, false);
         PlayerObject::releaseButton(button);
     }
-}
+};
