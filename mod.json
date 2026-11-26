@@ -3,9 +3,9 @@
   "gd": { "android": "*" },
   "id": "soupik34.gd-replay-tools",
   "name": "GD Replay Tools",
-  "version": "v0.1.0",
+  "version": "v0.2.0",
   "developer": "soupik34-ops",
-  "description": "Replay tools, gameplay practice options, and visual customization.",
+  "description": "Practice tools with a compact overlay, configurable speedhack and input replay.",
   "resources": {
     "sprites": [
       "resources/Emblem.png",
@@ -23,47 +23,30 @@
   "settings": {
     "record-inputs": {
       "name": "Record player inputs",
-      "description": "Capture timestamped jump/button press events for the replay system prototype.",
+      "description": "Internal state used by the in-game replay recorder.",
       "type": "bool",
       "default": false
     },
     "speedhack-enabled": {
       "name": "Enable Speedhack",
-      "description": "Reserved toggle; gameplay speed control is not implemented yet.",
+      "description": "Enable the gameplay speed multiplier.",
       "type": "bool",
       "default": false
     },
     "speedhack-multiplier": {
       "name": "Speed multiplier",
-      "description": "Target multiplier for the planned speed control.",
+      "description": "Gameplay speed multiplier used by the in-game menu.",
       "type": "float",
       "default": 1.0,
       "min": 0.25,
-      "max": 3.0,
+      "max": 5.0,
       "control": { "slider": true, "slider-step": 0.05 }
     },
     "noclip-enabled": {
       "name": "Enable Noclip",
-      "description": "Reserved toggle; collision handling is not implemented yet.",
+      "description": "Prevent player death from collision callbacks.",
       "type": "bool",
       "default": false
-    },
-    "jump-hack-enabled": {
-      "name": "Enable Jump Hack",
-      "description": "Reserved toggle; jump behavior modification is not implemented yet.",
-      "type": "bool",
-      "default": false
-    },
-    "custom-menu-background": {
-      "name": "Custom menu background",
-      "description": "Reserved toggle for the planned title-screen visual customization.",
-      "type": "bool",
-      "default": false
-    },
-    "menu-background-color": {
-      "name": "Menu background tint",
-      "type": "color",
-      "default": "#243b66"
     }
   }
 }
